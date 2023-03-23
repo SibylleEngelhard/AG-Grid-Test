@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid, JsCode
-from streamlit_autorefresh import st_autorefresh
+# from streamlit_autorefresh import st_autorefresh
 
 
 @st.cache_data
@@ -110,12 +110,16 @@ with col2:
 
 placeholder_sess_state = st.empty()
 placeholder_sess_state.write("Session State of selected rows: " + str(list(st.session_state.selected_rows_array)))
+placeholder_sess_state2 = st.empty()
+placeholder_sess_state2.write("Session State of grid_key: " + str(st.session_state.grid_key))
 
 st.session_state.example_df = ag_grid["data"]
 if not np.array_equal(st.session_state.selected_rows_array, st.session_state.example_df["Selected"].array):
     update_dataframe(st.session_state.example_df)
     st.session_state.selected_rows_array = st.session_state.example_df["Selected"].array
     placeholder_sess_state.write("Session State of selected rows: " + str(list(st.session_state.selected_rows_array)))
+    placeholder_sess_state2.write("Session State of grid_key: " + str(st.session_state.grid_key))
 
     st.session_state.grid_key += 1
-    st_autorefresh(interval=((500)), key="dataframerefresh")
+    st.experimental_rerun()
+    # st_autorefresh(interval=((500)), key="dataframerefresh")

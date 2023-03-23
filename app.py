@@ -36,7 +36,7 @@ if "example_df" not in st.session_state:
 if "selected_rows" not in st.session_state:
     st.session_state.selected_rows = [0, 1, 2, 3, 4]
 if "grid_key1" not in st.session_state:
-    st.session_state.grid_key1 = 0
+    st.session_state.grid_key1 = "a0"
 
 
 st.header("1.  AG-Grid with pre selected rows")
@@ -67,8 +67,8 @@ with col2:
         reload_data=False,
     )
 
-cola, colb, colc = st.columns([2, 3, 4], gap="small")
-with colb:
+cola, colb = st.columns([1, 3], gap="small")
+with cola:
     button = st.button("Update Dataframe")
     if button:
         temp1 = []
@@ -88,11 +88,13 @@ with colb:
             # View of dataframe in col1 gets updated
             placeholder_df.empty()
             placeholder_df.write(st.session_state.example_df)
-            st.session_state.grid_key1 += 1
-            st_autorefresh(interval=((500)), key="dataframerefresh")
+            st.session_state.grid_key1 = "a"+str(int(st.session_state.grid_key1[1:])+1)
+            st.experimental_rerun()
+            #st_autorefresh(interval=((500)), key="dataframerefresh")
 
-colc.write("Session State of selected rows: " + str(st.session_state.selected_rows))
-st.write("- On button click dataframe and 'selected_rows' get updated. AG-Grid gets refreshed with st.autorefresh but with wrongly selected rows")
+colb.write("Session State of selected rows: &nbsp;" + str(st.session_state.selected_rows)+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key1))
+
+st.write("- On button click dataframe and 'selected_rows' get updated. The session state af the AG-Grid key gets changed. AG-Grid gets refreshed with st.experimental_rerun() but with wrongly selected rows")
 
 # -----------------------------------------------------------------------------------------
 # 2. Example with boolean column
@@ -100,7 +102,7 @@ st.write("- On button click dataframe and 'selected_rows' get updated. AG-Grid g
 if "example_df2" not in st.session_state:
     st.session_state.example_df2 = load_data()
 if "grid_key2" not in st.session_state:
-    st.session_state.grid_key2 = "a0"  # grid_key2 is string to prevent errors with grid_key1
+    st.session_state.grid_key2 = "b0" 
 if "selected_rows_array" not in st.session_state:
     st.session_state.selected_rows_array = st.session_state.example_df["Selected"].array
 
@@ -177,16 +179,17 @@ with col4:
     )
 
 placeholder_sess_state = st.empty()
-placeholder_sess_state.write("Session State of selected rows: " + str(list(st.session_state.selected_rows_array)))
+placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array))+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key2))
 
 st.session_state.example_df2 = ag_grid2["data"]
 if not np.array_equal(st.session_state.selected_rows_array, st.session_state.example_df2["Selected"].array):
     update_dataframe(st.session_state.example_df2)
     st.session_state.selected_rows_array = st.session_state.example_df2["Selected"].array
-    placeholder_sess_state.write("Session State of selected rows: " + str(list(st.session_state.selected_rows_array)))
+    placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array))+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key2))
 
-    st.session_state.grid_key2 += "1"
-    st_autorefresh(interval=((500)), key="dataframerefresh2")
+    st.session_state.grid_key2 = "b"+str(int(st.session_state.grid_key2[1:])+1)
+    st.experimental_rerun()
+    #st_autorefresh(interval=((500)), key="dataframerefresh2")
 
   
-st.write("- On change of the editable boolean column the dataframe and 'selected_rows' get updated. AG-Grid gets refreshed after 500ms with st.autorefresh")
+st.write("- On change of the AG-Grid editable boolean column 'Selected', the dataframe and the session state of the 'selected_rows' get updated. The session state af the AG-Grid key gets changed. AG-Grid gets refreshed with st.experimental_rerun().")
