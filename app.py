@@ -73,7 +73,7 @@ temp1 = []
 ag_selected_rows_list = ag_grid["selected_rows"]
 for selected_row_dict in ag_selected_rows_list:
     temp1.append(selected_row_dict["_selectedRowNodeInfo"]["nodeRowIndex"])
-time.sleep(1)
+time.sleep(2)
 if st.session_state.selected_rows != temp1:
     st.session_state.selected_rows = temp1
  
