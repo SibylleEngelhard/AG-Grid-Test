@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import GridOptionsBuilder, AgGrid, JsCode
 from streamlit_autorefresh import st_autorefresh
-
+import time
 
 @st.cache_data
 def load_data():
@@ -39,7 +39,7 @@ if "grid_key1" not in st.session_state:
     st.session_state.grid_key1 = "a0"
 
 
-st.header("1.  AG-Grid with pre selected rows")
+st.header("1.  AG-Grid with pre-selected rows")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -66,35 +66,32 @@ with col2:
         enable_enterprise_modules=False,
         reload_data=False,
     )
+placeholder_sessstate=st.empty()
+placeholder_sessstate.write("Session State of selected rows: &nbsp;" + str(st.session_state.selected_rows)+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key1))
 
-cola, colb = st.columns([1, 3], gap="small")
-with cola:
-    button = st.button("Update Dataframe")
-    if button:
-        temp1 = []
-        ag_selected_rows_list = ag_grid["selected_rows"]
-        for selected_row_dict in ag_selected_rows_list:
-            temp1.append(selected_row_dict["_selectedRowNodeInfo"]["nodeRowIndex"])
+temp1 = []
+ag_selected_rows_list = ag_grid["selected_rows"]
+for selected_row_dict in ag_selected_rows_list:
+    temp1.append(selected_row_dict["_selectedRowNodeInfo"]["nodeRowIndex"])
+time.sleep(1)
+if st.session_state.selected_rows != temp1:
+    st.session_state.selected_rows = temp1
+ 
+    for i in range(5):  # index length of df
+        if i not in st.session_state.selected_rows:
+            st.session_state.example_df.at[i, "Selected"] = False
+        else:
+            st.session_state.example_df.at[i, "Selected"] = True
+    update_dataframe(st.session_state.example_df)
 
-        if st.session_state.selected_rows != temp1:
-            st.session_state.selected_rows = temp1
-            for i in range(5):  # index length of df
-                if i not in st.session_state.selected_rows:
-                    st.session_state.example_df.at[i, "Selected"] = False
-                else:
-                    st.session_state.example_df.at[i, "Selected"] = True
-            update_dataframe(st.session_state.example_df)
+    # View of dataframe in col1 gets updated
+    placeholder_df.empty()
+    placeholder_df.write(st.session_state.example_df)
+    st.session_state.grid_key1 = "a"+str(int(st.session_state.grid_key1[1:])+1)
+    placeholder_sessstate.write("Session State of selected rows: &nbsp;" + str(st.session_state.selected_rows)+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key1))
+    st.experimental_rerun()
+    #st_autorefresh(interval=((500)), key="dataframerefresh")
 
-            # View of dataframe in col1 gets updated
-            placeholder_df.empty()
-            placeholder_df.write(st.session_state.example_df)
-            st.session_state.grid_key1 = "a"+str(int(st.session_state.grid_key1[1:])+1)
-            st.experimental_rerun()
-            #st_autorefresh(interval=((500)), key="dataframerefresh")
-
-colb.write("Session State of selected rows: &nbsp;" + str(st.session_state.selected_rows)+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key1))
-
-st.write("- On button click dataframe and 'selected_rows' get updated. The session state af the AG-Grid key gets changed. AG-Grid gets refreshed with st.experimental_rerun() but with wrongly selected rows")
 
 # -----------------------------------------------------------------------------------------
 # 2. Example with boolean column
@@ -106,7 +103,7 @@ if "grid_key2" not in st.session_state:
 if "selected_rows_array" not in st.session_state:
     st.session_state.selected_rows_array = st.session_state.example_df["Selected"].array
 
-st.header("2. AG-Grid with boolean column")
+st.header("2. AG-Grid with boolean column checkbox")
 
 col3, col4 = st.columns(2)
 with col3:
@@ -116,27 +113,27 @@ with col4:
     st.write("AG-Grid:")
     checkbox_renderer = JsCode(
         """
-	    class CheckboxRenderer{
-	    init(params) {
-	        this.params = params;
-	        this.eGui = document.createElement('input');
-	        this.eGui.type = 'checkbox';
-	        this.eGui.checked = params.value;
-	        this.checkedHandler = this.checkedHandler.bind(this);
-	        this.eGui.addEventListener('click', this.checkedHandler);
-	    }
-	    checkedHandler(e) {
-	        let checked = e.target.checked;
-	        let colId = this.params.column.colId;
-	        this.params.node.setDataValue(colId, checked);
-	    }
-	    getGui(params) {
-	        return this.eGui;
-	    }
-	    destroy(params) {
-	    this.eGui.removeEventListener('click', this.checkedHandler);
-	    }
-	    }//end class
+        class CheckboxRenderer{
+        init(params) {
+            this.params = params;
+            this.eGui = document.createElement('input');
+            this.eGui.type = 'checkbox';
+            this.eGui.checked = params.value;
+            this.checkedHandler = this.checkedHandler.bind(this);
+            this.eGui.addEventListener('click', this.checkedHandler);
+        }
+        checkedHandler(e) {
+            let checked = e.target.checked;
+            let colId = this.params.column.colId;
+            this.params.node.setDataValue(colId, checked);
+        }
+        getGui(params) {
+            return this.eGui;
+        }
+        destroy(params) {
+        this.eGui.removeEventListener('click', this.checkedHandler);
+        }
+        }//end class
     """
     )
     rowStyle_renderer = JsCode(
@@ -191,5 +188,3 @@ if not np.array_equal(st.session_state.selected_rows_array, st.session_state.exa
     st.experimental_rerun()
     #st_autorefresh(interval=((500)), key="dataframerefresh2")
 
-  
-st.write("- On change of the AG-Grid editable boolean column 'Selected', the dataframe and the session state of the 'selected_rows' get updated. The session state af the AG-Grid key gets changed. AG-Grid gets refreshed with st.experimental_rerun().")
