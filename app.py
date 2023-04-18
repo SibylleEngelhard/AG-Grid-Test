@@ -5,6 +5,17 @@ from st_aggrid import GridOptionsBuilder, AgGrid, JsCode
 from streamlit_autorefresh import st_autorefresh
 import time
 
+
+# -----Page Configuration
+st.set_page_config(page_title="Test AG-Grid", initial_sidebar_state="collapsed")
+
+
+if "selected_rows" not in st.session_state:
+    st.session_state.selected_rows = [0, 1, 2, 3, 4]
+if "grid_key1" not in st.session_state:
+    st.session_state.grid_key1 = "a0"
+
+
 @st.cache_data
 def load_data():
     # Create Example DataFrame
@@ -19,14 +30,16 @@ def load_data():
     return df
 
 
+
+if "example_df" not in st.session_state:
+    st.session_state.example_df = load_data()
+
 def update_dataframe(input_df):
     # Function updates column "Selected" and calculates column "Difference" depending on column "Selected"
     mean = input_df.loc[input_df["Selected"], "Grade"].mean()
     input_df["Difference"] = np.where(input_df["Selected"].array, input_df["Grade"] - mean, np.nan)
 
 
-# -----Page Configuration
-st.set_page_config(page_title="Test AG-Grid", initial_sidebar_state="collapsed")
 
 #  ------------------------------------------------------------------------------------------
 # 1. Example with pre-selected rows
@@ -57,7 +70,7 @@ with col2:
 
     ag_grid = AgGrid(
         st.session_state.example_df,
-        key=st.session_state.grid_key1,
+        #key=st.session_state.grid_key1,
         gridOptions=gridOptions,
         data_return_mode="as_input",
         update_mode="selection_changed",
@@ -98,8 +111,8 @@ if st.session_state.selected_rows != temp1:
 
 if "example_df2" not in st.session_state:
     st.session_state.example_df2 = load_data()
-if "grid_key2" not in st.session_state:
-    st.session_state.grid_key2 = "b0" 
+#if "grid_key2" not in st.session_state:
+#    st.session_state.grid_key2 = "b0" 
 if "selected_rows_array" not in st.session_state:
     st.session_state.selected_rows_array = st.session_state.example_df["Selected"].array
 
@@ -165,26 +178,29 @@ with col4:
     gridOptions2["getRowStyle"] = rowStyle_renderer
     ag_grid2 = AgGrid(
         st.session_state.example_df2,
-        key=st.session_state.grid_key2,
+        key="temp",
         gridOptions=gridOptions2,
         data_return_mode="as_input",
         update_mode="grid_changed",
         fit_columns_on_grid_load=True,
         allow_unsafe_jscode=True,
         enable_enterprise_modules=False,
-        reload_data=False,
+        reload_data=True,
     )
 
 placeholder_sess_state = st.empty()
-placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array))+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key2))
+#placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array))+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key2))
+placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array)))
 
-st.session_state.example_df2 = ag_grid2["data"]
+st.session_state.example_df2["Selected"]= ag_grid2['data']["Selected"]
+
+#st.session_state.example_df2 = ag_grid2["data"]
 if not np.array_equal(st.session_state.selected_rows_array, st.session_state.example_df2["Selected"].array):
     update_dataframe(st.session_state.example_df2)
     st.session_state.selected_rows_array = st.session_state.example_df2["Selected"].array
-    placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array))+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key2))
+    #placeholder_sess_state.write("Session State of selected rows: &nbsp;" + str(list(st.session_state.selected_rows_array))+"&nbsp;&nbsp;&nbsp; - &nbsp;&nbsp;&nbsp;Session State of grid_key: &nbsp;" + str(st.session_state.grid_key2))
 
-    st.session_state.grid_key2 = "b"+str(int(st.session_state.grid_key2[1:])+1)
+    #st.session_state.grid_key2 = "b"+str(int(st.session_state.grid_key2[1:])+1)
     st.experimental_rerun()
     #st_autorefresh(interval=((500)), key="dataframerefresh2")
 
